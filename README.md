@@ -18,11 +18,10 @@ digital signing, storage, status tracking, and compliance monitoring.
 | Name | Role |
 |---|---|
 | Malunga Edith Hazel | Group Leader / Project Manager |
-| _Add member_ | _Add role_ |
-| _Add member_ | _Add role_ |
-| _Add member_ | _Add role_ |
-| _Add member_ | _Add role_ |
-| _Add member_ | _Add role_ |
+| Lizard Shadreck Semu | _Add role_ |
+| Josephat Akuzike Joachim | _Add role_ |
+| Dendeya Michael | _Add role_ |
+| Chimbalanga Gideon Tendai | _Add role_ |
 
 **Supervisor:** Sangwani Mkondowe (smkondowe@unima.ac.mw)
 
