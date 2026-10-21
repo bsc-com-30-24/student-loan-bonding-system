@@ -43,6 +43,10 @@ INSTALLED_APPS = [
 
     # Document verification feature
     'documents.apps.DocumentsConfig',
+    
+    # Bond status tracking feature
+    'bonds.apps.BondsConfig',
+
 ]
 
 
