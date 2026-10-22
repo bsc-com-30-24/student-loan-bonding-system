@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-ar=03$upq!wng+*eu1-wx7u8!!*w*4uym@mmrha6$(o6=_94*k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
 
 
 # Application definition
@@ -41,8 +41,11 @@ INSTALLED_APPS = [
     # REST API framework
     'rest_framework',
 
-    # Document verification feature
+    # Existing group application
     'documents.apps.DocumentsConfig',
+
+    # Gideon's Requirement 8
+    'verification.apps.VerificationConfig',
 ]
 
 

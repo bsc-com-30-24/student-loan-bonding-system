@@ -7,10 +7,16 @@ from django.conf.urls.static import static
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    # Gideon's Requirement 8
+    # Requirement 8
     path(
         "api/verification/",
         include("verification.urls")
+    ),
+
+    # Requirement 9
+    path(
+        "api/reports/",
+        include("reporting.urls")
     ),
 ]
 
@@ -19,4 +25,3 @@ if settings.DEBUG:
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT,
     )
-
