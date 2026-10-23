@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     # REST API framework
     'rest_framework',
+    'drf_spectacular',
 
     # Document verification feature
     'documents.apps.DocumentsConfig',
@@ -48,6 +49,23 @@ INSTALLED_APPS = [
     'bonds.apps.BondsConfig',
 
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Student Loan Bonding System API',
+    'DESCRIPTION': 'API documentation for the Student Loan Bonding System.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 
 MIDDLEWARE = [
