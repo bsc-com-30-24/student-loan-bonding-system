@@ -1,5 +1,6 @@
 from django.utils import timezone
-
+from drf_spectacular.utils import extend_schema
+from .serializers import AgreementSerializer, AgreementGenerateRequestSerializer
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
@@ -42,6 +43,16 @@ class AgreementDetailView(generics.RetrieveAPIView):
 
 class AgreementGenerateView(APIView):
     permission_classes = [IsAuthenticated]
+    @extend_schema(
+        request=AgreementGenerateRequestSerializer,
+        responses={201: AgreementSerializer},
+        summary="Generate a student loan bonding agreement",
+        description=(
+            "Generates an agreement for the authenticated student "
+            "and returns the agreement details."
+        ),
+        tags=["Agreements"],
+    )
 
     def post(self, request):
         student_id = request.data.get('student_id')
@@ -100,6 +111,16 @@ class AgreementGenerateView(APIView):
 class AgreementSignView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={200: AgreementSerializer},
+        summary="Sign a student loan bonding agreement",
+        description=(
+            "Records the student's signing timestamp and changes "
+            "the agreement status to SIGNED."
+        ),
+        tags=["Agreements"],
+    )
     def post(self, request, agreement_number):
         try:
             agreement = Agreement.objects.get(
