@@ -54,7 +54,7 @@ class LoanApplication(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
-    # Use a regular method instead of a property so drf-spectacular doesn't crash
+
     def get_total_amount(self):
         return self.tuition_amount + self.upkeep_amount
 
