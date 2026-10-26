@@ -27,6 +27,12 @@ urlpatterns = [
     # Agreement management API
     path("api/agreements/", include("agreements.urls")),
 
+    # Requirement 8: verification API
+    path("api/verification/", include("verification.urls")),
+
+    # Requirement 9: reporting API
+    path("api/reports/", include("reporting.urls")),
+
     # JWT authentication
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
@@ -53,3 +59,4 @@ if settings.DEBUG:
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT,
     )
+    
