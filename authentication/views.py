@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
+
 from django.core.mail import send_mail
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
+
+
+import random
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,8 +12,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from drf_spectacular.utils import extend_schema
+from .models import LoanApplication, UserProfile, get_user_role, PasswordResetOTP
 
-from .models import LoanApplication, UserProfile, get_user_role
+
+
+
 from .permissions import ALL_ROLES, HasRolePermission
 from .serializers import (
     LoanApplicationReviewSerializer,
@@ -30,7 +34,6 @@ class RegistrationView(generics.CreateAPIView):
     serializer_class = RegistrationSerializer
     permission_classes = [AllowAny]
 
-
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
@@ -41,27 +44,36 @@ class PasswordResetRequestView(APIView):
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        users = User._default_manager.filter(
+
+        users = User.objects.filter(
             email__iexact=serializer.validated_data["email"],
             is_active=True,
         )
 
         for user in users:
-            if not user.has_usable_password():
-                continue
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
+            otp = str(random.randint(100000, 999999))
+
+            PasswordResetOTP.objects.filter(
+                email=user.email
+            ).delete()
+
+            PasswordResetOTP.objects.create(
+                email=user.email,
+                otp=otp
+            )
+
             send_mail(
-                "Password reset request",
-                f"Use this token to reset your password.\n\nUID: {uid}\nToken: {token}",
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
+                subject="Password Reset OTP",
+                message=f"Your OTP is: {otp}",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
             )
 
         return Response(
-            {"detail": "If an account exists for this email, reset instructions have been sent."}
+            {
+                "detail": "If an account exists for this email, an OTP has been sent."
+            }
         )
-
 
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
@@ -69,10 +81,19 @@ class PasswordResetConfirmView(APIView):
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         user = serializer.validated_data["user"]
-        user.set_password(serializer.validated_data["new_password"])
+
+        user.set_password(
+            serializer.validated_data["new_password"]
+        )
         user.save(update_fields=["password"])
-        return Response({"detail": "Password has been reset."})
+
+        serializer.validated_data["otp_record"].delete()
+
+        return Response(
+            {"detail": "Password has been reset successfully."}
+        )
 
 
 class RoleTokenObtainPairView(TokenObtainPairView):

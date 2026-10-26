@@ -5,7 +5,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
+from .models import PasswordResetOTP
 from .models import LoanApplication, UserProfile, get_user_role
 
 User = get_user_model()
@@ -96,41 +96,51 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
-
-
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    uid = serializers.CharField()
-    token = serializers.CharField()
-    new_password = serializers.CharField(write_only=True, trim_whitespace=False)
-    password_confirmation = serializers.CharField(write_only=True, trim_whitespace=False)
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+
+    new_password = serializers.CharField(
+        write_only=True,
+        trim_whitespace=False
+    )
+
+    password_confirmation = serializers.CharField(
+        write_only=True,
+        trim_whitespace=False
+    )
 
     def validate(self, attrs):
+
         if attrs["new_password"] != attrs["password_confirmation"]:
             raise serializers.ValidationError(
                 {"password_confirmation": "Passwords do not match."}
             )
 
         try:
-            user_id = force_str(urlsafe_base64_decode(attrs["uid"]))
-            user = User._default_manager.get(pk=user_id, is_active=True)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist) as error:
+            user = User.objects.get(
+                email=attrs["email"],
+                is_active=True
+            )
+        except User.DoesNotExist:
             raise serializers.ValidationError(
-                {"token": "Invalid or expired password reset token."}
-            ) from error
-
-        if not default_token_generator.check_token(user, attrs["token"]):
-            raise serializers.ValidationError(
-                {"token": "Invalid or expired password reset token."}
+                {"email": "No active account found with this email."}
             )
 
-        try:
-            password_validation.validate_password(attrs["new_password"], user=user)
-        except ValidationError as error:
-            raise serializers.ValidationError({"new_password": error.messages}) from error
+        otp_record = PasswordResetOTP.objects.filter(
+            email=attrs["email"],
+            otp=attrs["otp"]
+        ).first()
+
+        if not otp_record:
+            raise serializers.ValidationError(
+                {"otp": "Invalid OTP."}
+            )
 
         attrs["user"] = user
-        return attrs
+        attrs["otp_record"] = otp_record
 
+        return attrs
 
 class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod

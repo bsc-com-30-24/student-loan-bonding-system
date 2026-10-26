@@ -1,5 +1,8 @@
 from django.contrib import admin
+from django.contrib import admin
+from .models import PasswordResetOTP
 
+admin.site.register(PasswordResetOTP)
 from .models import LoanApplication, UserProfile
 
 from django.contrib import admin
