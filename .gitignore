@@ -23,3 +23,10 @@ staticfiles/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local student uploads — do not commit uploaded documents
+student_documents/
+
+# Python cache
+__pycache__/
+*.py[cod]

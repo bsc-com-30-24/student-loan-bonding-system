@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Documents</title>
+</head>
+<body>
+    <h1>Student Loan Bonding System</h1>
+    <h2>Submit Your Documents</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <label for="document_type">Document type:</label>
+        <select name="document_type" id="document_type" required>
+            <option value="">Select document type</option>
+            <option value="student_id">Student ID</option>
+            <option value="affidavit">Affidavit Form</option>
+            <option value="guarantor_form">Guarantor Form</option>
+            <option value="other_letter">Other Letter</option>
+            <option value="national_id">National ID</option>
+            <option value="guarantor_id">Guarantor ID</option>
+        </select>
+
+        <p>
+            <label for="file">Choose document:</label>
+            <input type="file" name="file" id="file" required>
+        </p>
+
+        <button type="submit">Submit Document</button>
+    </form>
+
+    <p><a href="/logout/">Log out</a></p>
+</body>
+</html>

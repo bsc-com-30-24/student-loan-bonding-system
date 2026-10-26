@@ -1,17 +1,15 @@
 
 from django import forms
 from django.contrib import admin
-from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from .models import Document
 
 
 class DocumentVerificationForm(forms.ModelForm):
-
     class Meta:
         model = Document
-        fields = "__all__"
+        fields = ("status", "rejection_reason")
 
     def clean(self):
         cleaned_data = super().clean()
@@ -30,7 +28,6 @@ class DocumentVerificationForm(forms.ModelForm):
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-
     form = DocumentVerificationForm
 
     list_display = (
@@ -48,29 +45,30 @@ class DocumentAdmin(admin.ModelAdmin):
     ordering = ("-submitted_at",)
 
     readonly_fields = (
+        "student",
+        "document_type",
+        "file",
         "submitted_at",
         "reviewed_by",
         "reviewed_at",
     )
 
-    fieldsets = (
-        ("Student Submission", {
-            "fields": (
-                "student",
-                "document_type",
-                "file",
-                "submitted_at",
-            )
-        }),
-        ("Verification Decision", {
-            "fields": (
-                "status",
-                "rejection_reason",
-                "reviewed_by",
-                "reviewed_at",
-            )
-        }),
+    fields = (
+        "student",
+        "document_type",
+        "file",
+        "submitted_at",
+        "status",
+        "rejection_reason",
+        "reviewed_by",
+        "reviewed_at",
     )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     def save_model(self, request, obj, form, change):
         if change and "status" in form.changed_data:
