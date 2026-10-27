@@ -2,8 +2,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from django.core.mail import send_mail
-
-
 import random
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import PermissionDenied
@@ -12,12 +10,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from drf_spectacular.utils import extend_schema
+
 from .models import LoanApplication, UserProfile, get_user_role, PasswordResetOTP
-
-
-
-
-from .permissions import ALL_ROLES, HasRolePermission
+from .permissions import  HasRolePermission
 from .serializers import (
     LoanApplicationReviewSerializer,
     LoanApplicationSerializer,
@@ -30,10 +25,20 @@ from .serializers import (
 User = get_user_model()
 
 
+@extend_schema(
+    tags=["Authentication"],
+    summary="Register User",
+    description="Creates a new user account and assigns a role."
+)
 class RegistrationView(generics.CreateAPIView):
     serializer_class = RegistrationSerializer
     permission_classes = [AllowAny]
-
+    
+@extend_schema(
+    tags=["Authentication"],
+    summary="Request Password Reset",
+    description="Sends a one-time password (OTP) to the user's registered email."
+)
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
@@ -95,25 +100,32 @@ class PasswordResetConfirmView(APIView):
             {"detail": "Password has been reset successfully."}
         )
 
-
+@extend_schema(
+    tags=["Authentication"],
+    summary="Login",
+    description="Authenticates a user and returns JWT access and refresh tokens."
+)
 class RoleTokenObtainPairView(TokenObtainPairView):
     serializer_class = RoleTokenObtainPairSerializer
 
 
-class ProtectedDashboardView(APIView):
-    permission_classes = [IsAuthenticated, HasRolePermission]
-    allowed_roles = ALL_ROLES
+#class ProtectedDashboardView(APIView):
+    #permission_classes = [IsAuthenticated, HasRolePermission]
+    #allowed_roles = ALL_ROLES
 
-    def get(self, request):
-        return Response(
-            {
-                "message": f"Hello, {request.user.username}! You are authenticated.",
-                "user_id": request.user.id,
-                "role": get_user_role(request.user),
-            }
-        )
+   # def get(self, request):
+       # return Response(
+           # {
+                #"message": f"Hello, {request.user.username}! You are authenticated.",
+               # "user_id": request.user.id,
+               # "role": get_user_role(request.user),
+           # }
+       # )
 
-
+@extend_schema(
+    tags=["Authentication"],
+    description="Manage loan applications."
+)
 class LoanApplicationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, HasRolePermission]
 

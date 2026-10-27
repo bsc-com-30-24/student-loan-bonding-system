@@ -145,13 +145,17 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Loan Bonding Authentication API", 
-    "DESCRIPTION": "API for user authentication and authorization using JWT.",
+    "DESCRIPTION": """
+    Authentication API for registration, login,
+    password reset, and role-based access control.
+    """,
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
-    "COMPONENT_SPLIT_PATCH": True,
+    "CMPONENT_SPLIT_PATCH": True,
 
     "SECURITY": [{"BearerAuth": []}],
     "APPEND_COMPONENTS": {
