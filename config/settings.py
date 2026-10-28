@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'drf_spectacular',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
@@ -137,3 +138,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/documents/submit/"
 LOGOUT_REDIRECT_URL = "/login/"
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Student Loan Bonding System API',
+    'DESCRIPTION': 'API documentation for the Student Loan Bonding System.',
+    'VERSION': '1.0.0',
+}
