@@ -1,12 +1,11 @@
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from documents.views import RoleBasedLoginView
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -14,23 +13,30 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 urlpatterns = [
-    # Django administration
+    # Django administration and login
     path("admin/", admin.site.urls),
+    path("login/", RoleBasedLoginView.as_view(), name="login"),
+    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+
+    # Document management
+    path("documents/", include("documents.urls")),
 
     # Bond status tracking API
     path("api/bonds/", include("bonds.urls")),
 
-    # Document management API
-    path("documents/", include("documents.urls")),
-
     # Agreement management API
     path("api/agreements/", include("agreements.urls")),
 
-    # Requirement 8: verification API
+    # Verification API
     path("api/verification/", include("verification.urls")),
 
-    # Requirement 9: reporting API
+    # Reporting API
     path("api/reports/", include("reporting.urls")),
 
     # JWT authentication
@@ -59,4 +65,3 @@ if settings.DEBUG:
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT,
     )
-    

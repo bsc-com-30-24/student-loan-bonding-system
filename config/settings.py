@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'drf_spectacular',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
@@ -206,3 +207,7 @@ SPECTACULAR_SETTINGS = {
         }
     },
 }
+
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/documents/submit/"
+LOGOUT_REDIRECT_URL = "/login/"
