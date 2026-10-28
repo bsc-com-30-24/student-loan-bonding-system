@@ -32,3 +32,14 @@ class AgreementSerializer(serializers.ModelSerializer):
 class AgreementGenerateRequestSerializer(serializers.Serializer):
     student_id = serializers.CharField(max_length=50)
     loan_reference = serializers.CharField(max_length=100)
+
+
+class ErrorResponseSerializer(serializers.Serializer):
+    """Shape of every error response in this app: {"error": "..."}."""
+    error = serializers.CharField()
+
+
+class AgreementActionResponseSerializer(serializers.Serializer):
+    """Shape returned by the sign and countersign endpoints."""
+    message = serializers.CharField()
+    agreement = AgreementSerializer()
