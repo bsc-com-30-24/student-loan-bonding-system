@@ -1,0 +1,616 @@
+openapi: 3.0.3
+info:
+  title: Student Loan Bonding System API
+  version: 1.0.0
+  description: RESTful APIs for student loan document submission, verification, agreement
+    generation, signing, storage, retrieval, status tracking, reporting, and user
+    authentication.
+paths:
+  /api/agreements/:
+    get:
+      operationId: agreements_list
+      description: Staff see all agreements. Students see only their own.
+      summary: List agreements
+      tags:
+      - Agreements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agreement'
+          description: ''
+  /api/agreements/{agreement_number}/:
+    get:
+      operationId: agreements_retrieve
+      description: Returns one agreement by its agreement number. Students can only
+        retrieve their own agreements; any other agreement returns 404.
+      summary: Retrieve an agreement
+      parameters:
+      - in: path
+        name: agreement_number
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the agreement (returned when it is generated).
+        required: true
+      tags:
+      - Agreements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agreement'
+          description: ''
+  /api/agreements/{agreement_number}/countersign/:
+    post:
+      operationId: agreements_countersign_create
+      description: Staff only. Records the board's countersigning timestamp and changes
+        the agreement status to COUNTERSIGNED. Only allowed when the status is SIGNED.
+        No request body is needed.
+      summary: Countersign a student loan bonding agreement
+      parameters:
+      - in: path
+        name: agreement_number
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the agreement (returned when it is generated).
+        required: true
+      tags:
+      - Agreements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgreementActionResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agreement has not been signed by the student.
+        '403':
+          description: Admin (staff) access is required.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agreement not found.
+  /api/agreements/{agreement_number}/sign/:
+    post:
+      operationId: agreements_sign_create
+      description: Records the student's signing timestamp and changes the agreement
+        status to SIGNED. Only allowed while the status is GENERATED or PENDING_SIGNATURE.
+        No request body is needed.
+      summary: Sign a student loan bonding agreement
+      parameters:
+      - in: path
+        name: agreement_number
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the agreement (returned when it is generated).
+        required: true
+      tags:
+      - Agreements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgreementActionResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agreement is not in a signable status.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: You are not the owner of this agreement.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Agreement not found.
+  /api/agreements/generate/:
+    post:
+      operationId: agreements_generate_create
+      description: Creates a new agreement. Students may only generate an agreement
+        for their own student_id (their user id or username). Staff may generate one
+        for any student.
+      summary: Generate a student loan bonding agreement
+      tags:
+      - Agreements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementGenerateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgreementGenerateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgreementGenerateRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agreement'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing or empty student_id / loan_reference.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: A student tried to generate an agreement for someone else.
+  /api/bonds/:
+    get:
+      operationId: bonds_list
+      tags:
+      - bonds
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bond'
+          description: ''
+    post:
+      operationId: bonds_create
+      tags:
+      - bonds
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bond'
+          description: ''
+  /api/bonds/{id}/:
+    get:
+      operationId: bonds_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bonds
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bond'
+          description: ''
+  /api/bonds/{id}/status/:
+    patch:
+      operationId: bonds_status_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - bonds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBondStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBondStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBondStatusUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BondStatusUpdate'
+          description: ''
+  /api/reports/active-loans/:
+    get:
+      operationId: reports_active_loans_retrieve
+      tags:
+      - reports
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/reports/defaulters/:
+    get:
+      operationId: reports_defaulters_retrieve
+      tags:
+      - reports
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/reports/signed-bonds/:
+    get:
+      operationId: reports_signed_bonds_retrieve
+      tags:
+      - reports
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/token/:
+    post:
+      operationId: token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/token/refresh/:
+    post:
+      operationId: token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/verification/bonds/{student_id}/:
+    get:
+      operationId: verification_bonds_retrieve
+      parameters:
+      - in: path
+        name: student_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - verification
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Agreement:
+      type: object
+      properties:
+        agreement_number:
+          type: string
+          format: uuid
+          readOnly: true
+        student_id:
+          type: string
+          maxLength: 50
+        loan_reference:
+          type: string
+          maxLength: 100
+        agreement_content:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AgreementStatusEnum'
+          readOnly: true
+        generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        student_signed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        board_countersigned_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agreement_content
+      - agreement_number
+      - board_countersigned_at
+      - created_at
+      - generated_at
+      - loan_reference
+      - status
+      - student_id
+      - student_signed_at
+      - updated_at
+    AgreementActionResponse:
+      type: object
+      description: Shape returned by the sign and countersign endpoints.
+      properties:
+        message:
+          type: string
+        agreement:
+          $ref: '#/components/schemas/Agreement'
+      required:
+      - agreement
+      - message
+    AgreementGenerateRequestRequest:
+      type: object
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 50
+        loan_reference:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - loan_reference
+      - student_id
+    AgreementStatusEnum:
+      enum:
+      - GENERATED
+      - PENDING_SIGNATURE
+      - SIGNED
+      - COUNTERSIGNED
+      type: string
+      description: |-
+        * `GENERATED` - Generated
+        * `PENDING_SIGNATURE` - Pending Signature
+        * `SIGNED` - Signed
+        * `COUNTERSIGNED` - Countersigned
+    Bond:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        bond_reference:
+          type: string
+          format: uuid
+          readOnly: true
+        student:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA98Enum'
+          readOnly: true
+        rejection_reason:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        reviewed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        reviewed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - bond_reference
+      - created_at
+      - id
+      - rejection_reason
+      - reviewed_at
+      - reviewed_by
+      - status
+      - student
+      - updated_at
+    BondStatusUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusA98Enum'
+        rejection_reason:
+          type: string
+    ErrorResponse:
+      type: object
+      description: 'Shape of every error response in this app: {"error": "..."}.'
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    PatchedBondStatusUpdateRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusA98Enum'
+        rejection_reason:
+          type: string
+    StatusA98Enum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      - completed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `approved` - Approved
+        * `rejected` - Rejected
+        * `completed` - Completed
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Authorization header using the Bearer scheme.
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
