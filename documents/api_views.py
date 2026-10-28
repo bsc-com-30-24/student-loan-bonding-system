@@ -6,6 +6,9 @@ from rest_framework import generics, permissions, parsers, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
+
 from .models import Document
 from .serializers import DocumentSerializer
 
@@ -34,6 +37,37 @@ class StudentDocumentListCreateAPIView(generics.ListCreateAPIView):
 class DocumentVerificationAPIView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
+    @extend_schema(
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": ["verified", "rejected"],
+                        "description": "The decision for the submitted document.",
+                    },
+                    "rejection_reason": {
+                        "type": "string",
+                        "description": "Required when status is rejected.",
+                    },
+                },
+                "required": ["status"],
+            }
+        },
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: OpenApiResponse(
+                description="Invalid status or missing rejection reason."
+            ),
+            403: OpenApiResponse(
+                description="Administrator permission required."
+            ),
+            404: OpenApiResponse(
+                description="Document not found."
+            ),
+        },
+    )
     def patch(self, request, pk):
         document = get_object_or_404(Document, pk=pk)
 
