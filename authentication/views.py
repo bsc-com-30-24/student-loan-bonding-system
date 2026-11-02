@@ -79,9 +79,14 @@ class PasswordResetRequestView(APIView):
                 "detail": "If an account exists for this email, an OTP has been sent."
             }
         )
-
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
+
+    @extend_schema(
+        tags=["Authentication"],
+        summary="Confirm Password Reset",
+        description="Verifies OTP and resets the password."
+    )    
 
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
