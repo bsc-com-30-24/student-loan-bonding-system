@@ -58,3 +58,27 @@ class Document(models.Model):
             f"{self.get_document_type_display()} - "
             f"{self.student} ({self.status})"
         )
+
+
+class Notification(models.Model):
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="document_notifications",
+    )
+
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+
+    message = models.TextField()
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification for {self.student.username}"
