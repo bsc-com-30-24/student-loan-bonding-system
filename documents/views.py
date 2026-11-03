@@ -9,19 +9,24 @@ from django.urls import reverse
 from .models import Document
 
 
+# Login: redirect administrators and students to different pages
 class RoleBasedLoginView(auth_views.LoginView):
     template_name = "registration/login.html"
 
     def get_success_url(self):
         if self.request.user.is_staff:
             return "/admin/"
+
         return reverse("submit_document")
 
 
+# STUDENTS: Submit their own documents
 @login_required
 def submit_document(request):
     if request.user.is_staff:
-        raise PermissionDenied
+        raise PermissionDenied(
+            "Administrators cannot submit student documents."
+        )
 
     if request.method == "POST":
         document_type = request.POST.get("document_type")
@@ -45,6 +50,7 @@ def submit_document(request):
             request,
             "Document submitted successfully."
         )
+
         return redirect("submit_document")
 
     return render(
