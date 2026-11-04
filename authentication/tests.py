@@ -2,10 +2,19 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from rest_framework import status
 from rest_framework.test import APITestCase
+from drf_spectacular.generators import SchemaGenerator
 
 from .models import LoanApplication, UserProfile
 
 User = get_user_model()
+
+
+class LoanSchemaDocumentationTests(APITestCase):
+	def test_loan_endpoints_are_excluded_from_openapi_schema(self):
+		paths = SchemaGenerator().get_schema(request=None, public=True)["paths"]
+		self.assertNotIn("/api/loans/", paths)
+		self.assertNotIn("/api/loans/{id}/", paths)
+		self.assertIn("/api/register/", paths)
 
 
 class AuthenticationAndAccessControlTests(APITestCase):
