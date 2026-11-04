@@ -108,7 +108,8 @@ class RoleTokenObtainPairView(TokenObtainPairView):
 
 @extend_schema(
     tags=["Authentication"],
-    description="Manage loan applications."
+    description="Manage loan applications.",
+    exclude=True,
 )
 class LoanApplicationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, HasRolePermission]
