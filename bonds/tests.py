@@ -9,6 +9,11 @@ from rest_framework.test import APITestCase
 
 from .models import Bond, BondStatusHistory
 
+from django.contrib import admin
+from django.test import RequestFactory
+
+from .admin import BondAdmin
+
 
 User = get_user_model()
 
@@ -305,4 +310,94 @@ class BondHistoryTests(APITestCase):
         self.assertEqual(
             response.data[1]["new_status"],
             "approved"
+        )
+
+
+    def test_admin_status_change_creates_history(self):
+        # Create a simulated Django Admin request.
+        request = RequestFactory().post(
+            "/admin/bonds/bond/"
+        )
+        request.user = self.staff
+
+        # Administrator changes the status.
+        self.bond.status = "approved"
+
+        # Call the Django Admin save method.
+        bond_admin = BondAdmin(Bond, admin.site)
+
+        bond_admin.save_model(
+            request,
+            self.bond,
+            form=None,
+            change=True,
+        )
+
+        # Refresh the bond from the database.
+        self.bond.refresh_from_db()
+
+        self.assertEqual(
+            self.bond.status,
+            "approved"
+        )
+
+        # Confirm the history record was created.
+        history = BondStatusHistory.objects.get(
+            bond=self.bond
+        )
+
+        self.assertEqual(
+            history.previous_status,
+            "pending"
+        )
+
+        self.assertEqual(
+            history.new_status,
+            "approved"
+        )
+
+        self.assertEqual(
+            history.changed_by,
+            self.staff
+        )
+
+        self.assertIsNotNone(
+            history.changed_at
+        )
+
+
+    def test_admin_same_status_does_not_create_history(self):
+        # Simulate a Django Admin request.
+        request = RequestFactory().post(
+            "/admin/bonds/bond/"
+        )
+        request.user = self.staff
+
+        # Change the rejection reason, but not the status.
+        self.bond.rejection_reason = "Administrative note"
+
+        # Save the bond through Django Admin.
+        bond_admin = BondAdmin(Bond, admin.site)
+
+        bond_admin.save_model(
+            request,
+            self.bond,
+            form=None,
+            change=True,
+        )
+
+        # Confirm the bond still has its original status.
+        self.bond.refresh_from_db()
+
+        self.assertEqual(
+            self.bond.status,
+            "pending"
+        )
+
+        # No history record should have been created.
+        self.assertEqual(
+            BondStatusHistory.objects.filter(
+                bond=self.bond
+            ).count(),
+            0
         )
