@@ -1,6 +1,5 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-
 from django.utils import timezone
 from .models import Bond
 from .serializers import (
@@ -10,6 +9,7 @@ from .serializers import (
 )
 
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 
 class BondListCreateView(generics.ListCreateAPIView):
@@ -26,19 +26,6 @@ class BondListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(student=self.request.user)
-
-
-class BondDetailView(generics.RetrieveAPIView):
-    serializer_class = BondSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-
-        if user.is_staff:
-            return Bond.objects.all()
-
-        return Bond.objects.filter(student=user)
 
 
 class BondStatusUpdateView(generics.UpdateAPIView):
@@ -70,6 +57,22 @@ class BondStatusUpdateView(generics.UpdateAPIView):
 
 
 
+@extend_schema_view(
+    get=extend_schema(
+        summary="View Bond Status History",
+        description=(
+            "Returns the status change history of a bond, "
+            "with the newest changes appearing first. "
+            "Staff members can view any bond history, "
+            "while students can view only their own. "
+            "Authentication is required."
+        ),
+        responses={
+            200: BondStatusHistorySerializer(many=True)
+        },
+        tags=["Bonds"],
+    )
+)
 class BondStatusHistoryView(generics.ListAPIView):
     serializer_class = BondStatusHistorySerializer
     permission_classes = [IsAuthenticated]
@@ -92,3 +95,16 @@ class BondStatusHistoryView(generics.ListAPIView):
         return bond.status_history.select_related(
             "changed_by"
         )
+
+
+class BondDetailView(generics.RetrieveAPIView):
+    serializer_class = BondSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff:
+            return Bond.objects.all()
+
+        return Bond.objects.filter(student=user)
