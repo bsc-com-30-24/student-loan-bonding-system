@@ -58,3 +58,47 @@ class Bond(models.Model):
 
     def __str__(self):
         return f"Bond {self.bond_reference} - {self.status}"
+
+    
+class BondStatusHistory(models.Model):
+    bond = models.ForeignKey(
+        Bond,
+        on_delete=models.CASCADE,
+        related_name="status_history",
+    )
+
+    previous_status = models.CharField(
+        max_length=20,
+        choices=Bond.STATUS_CHOICES,
+    )
+
+    new_status = models.CharField(
+        max_length=20,
+        choices=Bond.STATUS_CHOICES,
+    )
+
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="bond_status_changes",
+    )
+
+    changed_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    reason = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    class Meta:
+        ordering = ["-changed_at", "-id"]
+
+    def __str__(self):
+        return (
+            f"Bond {self.bond_id}: "
+            f"{self.previous_status} -> {self.new_status}"
+        )
