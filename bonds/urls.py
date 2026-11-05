@@ -3,6 +3,7 @@ from .views import (
     BondListCreateView,
     BondDetailView,
     BondStatusUpdateView,
+    BondStatusHistoryView,
 )
 
 urlpatterns = [
@@ -12,5 +13,10 @@ urlpatterns = [
         "<int:pk>/status/",
         BondStatusUpdateView.as_view(),
         name="bond-status-update",
+    ),
+    path(
+        "<int:pk>/history/",
+        BondStatusHistoryView.as_view(),
+        name="bond-status-history",
     ),
 ]
