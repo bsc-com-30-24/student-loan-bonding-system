@@ -1,10 +1,8 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from django.db import transaction
 from django.utils import timezone
-
-from .models import Bond, BondStatusHistory
+from .models import Bond
 from .serializers import (
     BondSerializer,
     BondStatusUpdateSerializer,
@@ -54,30 +52,22 @@ class BondStatusUpdateView(generics.UpdateAPIView):
             return Bond.objects.all()
 
         return Bond.objects.none()
-
     
+    
+
     def perform_update(self, serializer):
-        previous_status = serializer.instance.status
-        new_status = serializer.validated_data.get(
-            "status", previous_status
+        bond = serializer.instance
+
+        bond._history_actor = self.request.user
+        bond._history_reason = serializer.validated_data.get(
+            "rejection_reason", ""
         )
 
-        with transaction.atomic():
-            bond = serializer.save(
-                reviewed_by=self.request.user,
-                reviewed_at=timezone.now(),
-            )
+        serializer.save(
+            reviewed_by=self.request.user,
+            reviewed_at=timezone.now(),
+        )
 
-            if previous_status != new_status:
-                BondStatusHistory.objects.create(
-                    bond=bond,
-                    previous_status=previous_status,
-                    new_status=new_status,
-                    changed_by=self.request.user,
-                    reason=serializer.validated_data.get(
-                        "rejection_reason", ""
-                    ),
-                )
 
 
 class BondStatusHistoryView(generics.ListAPIView):

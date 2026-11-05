@@ -401,3 +401,38 @@ class BondHistoryTests(APITestCase):
             ).count(),
             0
         )
+
+
+    def test_direct_model_status_change_creates_history(self):
+        # Change the status directly through Django.
+        self.bond.status = "approved"
+        self.bond.save()
+
+        # Confirm the bond was updated.
+        self.bond.refresh_from_db()
+
+        self.assertEqual(
+            self.bond.status,
+            "approved"
+        )
+
+        # A history record should also be created.
+        history = BondStatusHistory.objects.get(
+            bond=self.bond
+        )
+
+        self.assertEqual(
+            history.previous_status,
+            "pending"
+        )
+
+        self.assertEqual(
+            history.new_status,
+            "approved"
+        )
+
+        self.assertIsNotNone(history.changed_at)
+
+        # A direct model save has no authenticated
+        # request, so the actor is unknown.
+        self.assertIsNone(history.changed_by)
