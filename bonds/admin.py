@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import Bond
 
-
 @admin.register(Bond)
 class BondAdmin(admin.ModelAdmin):
     list_display = (
@@ -25,3 +24,16 @@ class BondAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    
+    
+    def save_model(self, request, obj, form, change):
+        if change:
+            obj._history_actor = request.user
+
+            obj._history_reason = (
+                obj.rejection_reason
+                if obj.status == "rejected"
+                else ""
+            )
+
+        super().save_model(request, obj, form, change)

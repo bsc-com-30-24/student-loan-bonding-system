@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Bond
-
+from .models import Bond, BondStatusHistory
 
 class BondSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,3 +52,28 @@ class BondStatusUpdateSerializer(serializers.ModelSerializer):
             })
 
         return attrs
+    
+
+
+class BondStatusHistorySerializer(serializers.ModelSerializer):
+    changed_by_username = serializers.CharField(
+        source="changed_by.username",
+        read_only=True,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = BondStatusHistory
+
+        fields = [
+            "id",
+            "bond",
+            "previous_status",
+            "new_status",
+            "changed_by",
+            "changed_by_username",
+            "changed_at",
+            "reason",
+        ]
+
+        read_only_fields = fields

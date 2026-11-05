@@ -1,8 +1,15 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-
+from django.utils import timezone
 from .models import Bond
-from .serializers import BondSerializer, BondStatusUpdateSerializer
+from .serializers import (
+    BondSerializer,
+    BondStatusUpdateSerializer,
+    BondStatusHistorySerializer,
+)
+
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 
 class BondListCreateView(generics.ListCreateAPIView):
@@ -21,19 +28,6 @@ class BondListCreateView(generics.ListCreateAPIView):
         serializer.save(student=self.request.user)
 
 
-class BondDetailView(generics.RetrieveAPIView):
-    serializer_class = BondSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-
-        if user.is_staff:
-            return Bond.objects.all()
-
-        return Bond.objects.filter(student=user)
-
-
 class BondStatusUpdateView(generics.UpdateAPIView):
     serializer_class = BondStatusUpdateSerializer
     permission_classes = [IsAuthenticated]
@@ -45,11 +39,72 @@ class BondStatusUpdateView(generics.UpdateAPIView):
             return Bond.objects.all()
 
         return Bond.objects.none()
+    
+    
 
     def perform_update(self, serializer):
-        from django.utils import timezone
+        bond = serializer.instance
+
+        bond._history_actor = self.request.user
+        bond._history_reason = serializer.validated_data.get(
+            "rejection_reason", ""
+        )
 
         serializer.save(
             reviewed_by=self.request.user,
             reviewed_at=timezone.now(),
         )
+
+
+
+@extend_schema_view(
+    get=extend_schema(
+        summary="View Bond Status History",
+        description=(
+            "Returns the status change history of a bond, "
+            "with the newest changes appearing first. "
+            "Staff members can view any bond history, "
+            "while students can view only their own. "
+            "Authentication is required."
+        ),
+        responses={
+            200: BondStatusHistorySerializer(many=True)
+        },
+        tags=["Bonds"],
+    )
+)
+class BondStatusHistoryView(generics.ListAPIView):
+    serializer_class = BondStatusHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    http_method_names = ["get", "head", "options"]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff:
+            bonds = Bond.objects.all()
+        else:
+            bonds = Bond.objects.filter(student=user)
+
+        bond = get_object_or_404(
+            bonds,
+            pk=self.kwargs["pk"],
+        )
+
+        return bond.status_history.select_related(
+            "changed_by"
+        )
+
+
+class BondDetailView(generics.RetrieveAPIView):
+    serializer_class = BondSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff:
+            return Bond.objects.all()
+
+        return Bond.objects.filter(student=user)
