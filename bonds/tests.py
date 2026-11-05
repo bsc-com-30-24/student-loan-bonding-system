@@ -436,3 +436,56 @@ class BondHistoryTests(APITestCase):
         # A direct model save has no authenticated
         # request, so the actor is unknown.
         self.assertIsNone(history.changed_by)
+
+
+    def test_update_fields_status_change_creates_one_history(self):
+        # Update only the bond's status.
+        self.bond.status = "approved"
+        self.bond.save(update_fields=["status"])
+
+        # Confirm the status was saved.
+        self.bond.refresh_from_db()
+        self.assertEqual(self.bond.status, "approved")
+
+        # Confirm exactly one history record exists.
+        history_records = BondStatusHistory.objects.filter(
+            bond=self.bond
+        )
+
+        self.assertEqual(history_records.count(), 1)
+
+        history = history_records.first()
+
+        self.assertEqual(history.previous_status, "pending")
+        self.assertEqual(history.new_status, "approved")
+
+
+    def test_update_fields_without_status_does_not_create_history(self):
+        # Change the status in memory.
+        self.bond.status = "approved"
+
+        # Update another field.
+        self.bond.rejection_reason = "Updated note"
+
+        # Save only the rejection_reason field.
+        self.bond.save(update_fields=["rejection_reason"])
+
+        # Reload the actual database values.
+        self.bond.refresh_from_db()
+
+        # The status should remain unchanged.
+        self.assertEqual(self.bond.status, "pending")
+
+        # The other field should be updated.
+        self.assertEqual(
+            self.bond.rejection_reason,
+            "Updated note"
+        )
+
+        # No status history should be created.
+        self.assertEqual(
+            BondStatusHistory.objects.filter(
+                bond=self.bond
+            ).count(),
+            0
+        )
