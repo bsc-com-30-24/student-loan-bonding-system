@@ -1,9 +1,9 @@
-
 from django.urls import path
 from . import views
 from .api_views import (
     StudentDocumentListCreateAPIView,
     DocumentVerificationAPIView,
+    DocumentDownloadAPIView,
 )
 
 urlpatterns = [
@@ -26,5 +26,12 @@ urlpatterns = [
         "api/<int:pk>/verify/",
         DocumentVerificationAPIView.as_view(),
         name="document_verification_api",
+    ),
+
+    # API for students and administrators to download documents
+    path(
+        "api/<int:pk>/download/",
+        DocumentDownloadAPIView.as_view(),
+        name="document_download_api",
     ),
 ]

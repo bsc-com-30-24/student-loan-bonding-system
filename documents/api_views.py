@@ -1,4 +1,4 @@
-
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -109,3 +109,54 @@ class DocumentVerificationAPIView(APIView):
             "reviewed_by": request.user.username,
             "reviewed_at": document.reviewed_at,
         })
+        
+
+class DocumentDownloadAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        tags=["Documents"],
+        summary="Download a submitted document",
+        description=(
+            "Allows an authenticated student to download their own submitted "
+            "documents. Administrators can download documents submitted by "
+            "any student. Other students' documents are not accessible."
+        ),
+        responses={
+            200: OpenApiTypes.BINARY,
+            404: OpenApiResponse(
+                description="Document not found or file unavailable."
+            ),
+        },
+    )
+    def get(self, request, pk):
+        if request.user.is_staff:
+            document = get_object_or_404(Document, pk=pk)
+        else:
+            document = get_object_or_404(
+                Document,
+                pk=pk,
+                student=request.user
+            )
+
+        if not document.file:
+            return Response(
+                {"error": "No file is attached to this document."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            file_handle = document.file.open("rb")
+        except (FileNotFoundError, OSError, ValueError):
+            return Response(
+                {"error": "The document file is unavailable."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        filename = document.file.name.rsplit("/", 1)[-1]
+
+        return FileResponse(
+            file_handle,
+            as_attachment=True,
+            filename=filename
+        )
