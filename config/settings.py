@@ -13,23 +13,22 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# SECURITY WARNING: keep the secret key used in production secret!
+
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-ar=03$upq!wng+*eu1-wx7u8!!*w*4uym@mmrha6$(o6=_94*k',
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# Defaults to True for local development; set DJANGO_DEBUG=false in production.
+
 DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() == 'true'
 
-# Always non-empty, so runserver works whether DEBUG is on or off.
+
 ALLOWED_HOSTS = [
     h.strip()
     for h in os.environ.get(
@@ -39,7 +38,7 @@ ALLOWED_HOSTS = [
 ]
 
 
-# Application definition
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -49,18 +48,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # REST API framework, JWT and documentation
+    
     'rest_framework',
     'rest_framework_simplejwt',
     'drf_spectacular',
 
-    # Project applications
+   
     'authentication',
     'documents.apps.DocumentsConfig',
     'agreements.apps.AgreementsConfig',
     'bonds.apps.BondsConfig',
-    'verification.apps.VerificationConfig',   # Requirement 8
-    'reporting.apps.ReportingConfig',         # Requirement 9
+    'verification.apps.VerificationConfig',   
+    'reporting.apps.ReportingConfig',         
 ]
 
 
@@ -94,9 +93,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# SQLite by default. Set DB_NAME (plus DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
-# to use PostgreSQL instead.
+
 if os.environ.get('DB_NAME'):
     DATABASES = {
         'default': {
@@ -117,7 +114,7 @@ else:
     }
 
 
-# Password validation
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -134,7 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
+
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -144,17 +141,16 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files
+
 STATIC_URL = 'static/'
 
 
-# Uploaded media files
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-# Email (prints to the console unless EMAIL_HOST is set)
-# Do not define MAILERS as well: Django refuses to start with both.
+
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
     'django.core.mail.backends.smtp.EmailBackend'
@@ -169,7 +165,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
 
 
-# Django REST Framework
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -182,7 +178,7 @@ REST_FRAMEWORK = {
 }
 
 
-# Swagger and ReDoc configuration
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Student Loan Bonding System API',
     'DESCRIPTION': (
