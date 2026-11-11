@@ -54,7 +54,7 @@ class WorkflowIntegrationTests(APITestCase):
             "officer1", UserProfile.Role.LOAN_BOARD_OFFICER
         )
 
-    # ---------- helpers ----------
+   
 
     def upload(self, doc_type, user=None):
         self.client.force_authenticate(user or self.student)
@@ -100,8 +100,7 @@ class WorkflowIntegrationTests(APITestCase):
 
   
     def test_full_workflow(self):
-        # 1-2. Student submits, admin verifies. The bond appears only
-        # after the last compulsory document is verified.
+
         last = None
         for index, doc_type in enumerate(COMPULSORY_DOCUMENT_TYPES):
             last = self.review(self.upload(doc_type))
@@ -110,19 +109,19 @@ class WorkflowIntegrationTests(APITestCase):
             self.assertEqual(last.data["bond_generated"], is_last)
             self.assertEqual(Bond.objects.count(), 1 if is_last else 0)
 
-        # 3. Exactly one pending bond, reported in the response.
+       
         bond = Bond.objects.get()
         self.assertEqual(bond.student, self.student)
         self.assertEqual(bond.status, "pending")
         self.assertEqual(last.data["bond_id"], bond.id)
 
-        # Notifications: one per review plus one for the bond.
+        
         self.assertEqual(
             Notification.objects.filter(student=self.student).count(),
             len(COMPULSORY_DOCUMENT_TYPES) + 1,
         )
 
-        # The student sees the bond; another student does not.
+        
         self.client.force_authenticate(self.student)
         listing = self.client.get(reverse("bond-list-create"))
         self.assertEqual([b["id"] for b in listing.data], [bond.id])
@@ -131,16 +130,16 @@ class WorkflowIntegrationTests(APITestCase):
             self.client.get(reverse("bond-list-create")).data, []
         )
 
-        # 5. No agreement before the bond is approved.
+        
         self.client.force_authenticate(self.student)
         response = self.client.post(reverse("agreement-generate"))
         self.assertEqual(response.status_code, 400)
 
-        # 4. Admin approves the bond.
+        
         response = self.approve_bond(bond.id)
         self.assertEqual(response.status_code, 200, response.data)
 
-        # 5. Student generates the agreement (once only).
+        
         self.client.force_authenticate(self.student)
         response = self.client.post(reverse("agreement-generate"))
         self.assertEqual(response.status_code, 201, response.data)
@@ -158,33 +157,33 @@ class WorkflowIntegrationTests(APITestCase):
             kwargs={"agreement_number": agreement_number},
         )
 
-        # Countersigning before the student signs is refused.
+        
         self.client.force_authenticate(self.officer)
         self.assertEqual(self.client.post(countersign_url).status_code, 400)
 
-        # Another student cannot sign it.
+        
         self.client.force_authenticate(self.other_student)
         self.assertEqual(self.client.post(sign_url).status_code, 403)
 
-        # 6. The owner signs.
+        
         self.client.force_authenticate(self.student)
         self.assertEqual(self.client.post(sign_url).status_code, 200)
 
-        # Only the Loan Board Officer may countersign.
+        
         for user in (self.student, self.admin):
             self.client.force_authenticate(user)
             self.assertEqual(
                 self.client.post(countersign_url).status_code, 403
             )
 
-        # 7. The officer countersigns.
+       
         self.client.force_authenticate(self.officer)
         self.assertEqual(self.client.post(countersign_url).status_code, 200)
         self.assertEqual(
             Agreement.objects.get().status, Agreement.Status.COUNTERSIGNED
         )
 
-        # The PDF can be downloaded.
+      
         self.client.force_authenticate(self.student)
         response = self.client.get(
             reverse(
@@ -206,7 +205,7 @@ class WorkflowIntegrationTests(APITestCase):
         self.assertEqual(rejected.status_code, 200)
         self.assertEqual(Bond.objects.count(), 0)
 
-        # Re-uploading and verifying a good copy completes the set.
+        
         response = self.review(self.upload(COMPULSORY_DOCUMENT_TYPES[-1]))
         self.assertTrue(response.data["bond_generated"])
         self.assertEqual(Bond.objects.count(), 1)
@@ -215,7 +214,7 @@ class WorkflowIntegrationTests(APITestCase):
         self.upload_and_verify_all()
         self.assertEqual(Bond.objects.count(), 1)
 
-        # Re-verifying more copies of compulsory documents adds nothing.
+       
         for doc_type in COMPULSORY_DOCUMENT_TYPES:
             response = self.review(self.upload(doc_type))
             self.assertFalse(response.data["bond_generated"])
