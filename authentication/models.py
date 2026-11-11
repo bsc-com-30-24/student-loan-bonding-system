@@ -1,5 +1,9 @@
+from decimal import Decimal
+
 from django.conf import settings
-from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.db import models, transaction
+from django.utils import timezone
 
 
 def get_user_role(user):
@@ -27,10 +31,63 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="profile",
     )
-    role = models.CharField(max_length=32, choices=Role.choices, default=Role.STUDENT)
+    role = models.CharField(
+        max_length=32,
+        choices=Role.choices,
+        default=Role.STUDENT,
+    )
+    student_registration_number = models.CharField(
+        max_length=50,
+        unique=True,
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"
+
+
+phone_validator = RegexValidator(
+    r"^\+?[0-9 ()-]{7,20}$",
+    "Enter a valid phone number, for example +265 999 123 456.",
+)
+
+
+class StudentDetail(models.Model):
+    """The student's personal details, kept once and reused on every agreement.
+
+    The registration number stays on UserProfile; this holds the rest.
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="student_detail",
+    )
+    full_name = models.CharField(max_length=150, blank=True, default="")
+    programme = models.CharField(
+        max_length=150,
+        blank=True,
+        default="",
+        help_text="Programme of study, for example BSc Computer Science.",
+    )
+    year_of_study = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(8)],
+    )
+    phone_number = models.CharField(
+        max_length=20, blank=True, default="", validators=[phone_validator]
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def is_complete(self):
+        """True when everything an agreement needs about the student is filled in."""
+        return bool(self.full_name and self.programme and self.year_of_study)
+
+    def __str__(self):
+        return f"{self.full_name or self.user.username} (details)"
 
 
 class LoanApplication(models.Model):
@@ -44,9 +101,23 @@ class LoanApplication(models.Model):
         on_delete=models.CASCADE,
         related_name="loan_applications",
     )
-    tuition_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    upkeep_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-
+    loan_reference = models.CharField(
+        max_length=30,
+        unique=True,
+        blank=True,
+    )
+    tuition_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    upkeep_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     status = models.CharField(
         max_length=10,
         choices=Status.choices,
@@ -61,13 +132,23 @@ class LoanApplication(models.Model):
     def get_total_amount(self):
         return self.tuition_amount + self.upkeep_amount
 
+    def save(self, *args, **kwargs):
+        # First save gets a database ID; then the reference is built from it,
+        # e.g. ID 15 in 2026 -> SLBS-2026-00015. Both saves succeed or neither does.
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if not self.loan_reference:
+                self.loan_reference = f"SLBS-{timezone.now().year}-{self.pk:05d}"
+                super().save(update_fields=["loan_reference"])
+
     def __str__(self):
         return f"Loan application {self.pk} (Total: {self.get_total_amount()})"
 
 
 class PasswordResetOTP(models.Model):
-    email = models.EmailField()
+    email = models.EmailField(db_index=True)
     otp = models.CharField(max_length=6)
+    attempts = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

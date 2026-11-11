@@ -13,8 +13,14 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from the project's .env file.
+load_dotenv(BASE_DIR / '.env')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -28,6 +34,12 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 # Defaults to True for local development; set DJANGO_DEBUG=false in production.
 DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() == 'true'
+
+# Refuse to start in production with the placeholder key.
+if not DEBUG and SECRET_KEY.startswith('django-insecure-'):
+    raise ImproperlyConfigured(
+        'Set DJANGO_SECRET_KEY in the environment when DJANGO_DEBUG is false.'
+    )
 
 # Always non-empty, so runserver works whether DEBUG is on or off.
 ALLOWED_HOSTS = [
@@ -45,7 +57,6 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
@@ -193,6 +204,16 @@ SPECTACULAR_SETTINGS = {
     ),
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    # Stable names for the two different 'status' choice sets in Swagger.
+    'ENUM_NAME_OVERRIDES': {
+        'LoanStatusEnum': 'authentication.models.LoanApplication.Status',
+        'DocumentStatusEnum': 'documents.models.Document.STATUS_CHOICES',
+    },
+    # Section order in Swagger: Authentication, Documents, Bonds, Agreements.
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.hooks.postprocess_schema_enums',
+        'authentication.schema.order_tags',
+    ],
     'COMPONENT_SPLIT_REQUEST': True,
     'COMPONENT_SPLIT_PATCH': True,
     'SECURITY': [{'BearerAuth': []}],
@@ -207,7 +228,3 @@ SPECTACULAR_SETTINGS = {
         }
     },
 }
-
-LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/documents/submit/"
-LOGOUT_REDIRECT_URL = "/login/"

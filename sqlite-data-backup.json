@@ -1,0 +1,386 @@
+[
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1500000$sC88lIh94r3fY2gBqIrqSw$eiWusgVUNeHGkp2LK5OzjDydrVM6hKwInl8qTLPB9fw=",
+    "last_login": "2026-10-28T15:11:10.082Z",
+    "is_superuser": true,
+    "username": "teststudent",
+    "first_name": "",
+    "last_name": "",
+    "email": "thatboyaku@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-18T13:05:08.426Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1500000$LglDUF0DcU6mRvcyg8BvtH$Rrta6AsHL0v/plwtuw/+BgEolP20gf41dQ3rx2TAF9g=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "shadreck",
+    "first_name": "",
+    "last_name": "",
+    "email": "bed-com-03-24@unima.ac",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-28T18:41:52.656Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1500000$DpzU18U4ioUfYs8hytvWWn$B93+RmpuFl6YuH2ZewTCKR9pSqlbOT2fcbxd4x4yDv0=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "lizard",
+    "first_name": "",
+    "last_name": "",
+    "email": "lizard@unima.ac",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-29T11:52:09.866Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "authentication.userprofile",
+  "pk": 1,
+  "fields": {
+    "user": [
+      "shadreck"
+    ],
+    "role": "student",
+    "student_registration_number": null
+  }
+},
+{
+  "model": "authentication.userprofile",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "lizard"
+    ],
+    "role": "student",
+    "student_registration_number": null
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 1,
+  "fields": {
+    "student": [
+      "lizard"
+    ],
+    "document_type": "student_id",
+    "file": "student_documents/Screenshot_2026-09-15_134048.png",
+    "status": "rejected",
+    "rejection_reason": "doesnt feet",
+    "submitted_at": "2026-10-29T11:54:38.535Z",
+    "reviewed_by": [
+      "teststudent"
+    ],
+    "reviewed_at": "2026-11-05T11:54:23.024Z"
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 2,
+  "fields": {
+    "student": [
+      "lizard"
+    ],
+    "document_type": "student_id",
+    "file": "student_documents/Screenshot_2026-09-15_134048_5teiSdz.png",
+    "status": "verified",
+    "rejection_reason": "",
+    "submitted_at": "2026-10-29T11:54:40.301Z",
+    "reviewed_by": [
+      "teststudent"
+    ],
+    "reviewed_at": "2026-10-29T12:07:14.631Z"
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 3,
+  "fields": {
+    "student": [
+      "shadreck"
+    ],
+    "document_type": "student_id",
+    "file": "student_documents/Screenshot_2026-09-15_134048_3TVG6ZL.png",
+    "status": "pending",
+    "rejection_reason": "",
+    "submitted_at": "2026-10-29T12:48:03.902Z",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 4,
+  "fields": {
+    "student": [
+      "shadreck"
+    ],
+    "document_type": "student_id",
+    "file": "student_documents/Screenshot_2026-09-15_134048_elYeNL1.png",
+    "status": "rejected",
+    "rejection_reason": "not",
+    "submitted_at": "2026-10-29T13:09:11.254Z",
+    "reviewed_by": [
+      "teststudent"
+    ],
+    "reviewed_at": "2026-10-29T13:12:27.780Z"
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 5,
+  "fields": {
+    "student": [
+      "shadreck"
+    ],
+    "document_type": "student_id",
+    "file": "student_documents/1_cvXW4oIXx9wILMV1JOdkiw.webp",
+    "status": "verified",
+    "rejection_reason": "",
+    "submitted_at": "2026-11-05T11:48:09.920Z",
+    "reviewed_by": [
+      "teststudent"
+    ],
+    "reviewed_at": "2026-11-05T11:53:18.164Z"
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 6,
+  "fields": {
+    "student": [
+      "shadreck"
+    ],
+    "document_type": "national_id",
+    "file": "student_documents/Note_from_ChatGPT.txt",
+    "status": "rejected",
+    "rejection_reason": "not qualify",
+    "submitted_at": "2026-11-05T11:57:40.723Z",
+    "reviewed_by": [
+      "teststudent"
+    ],
+    "reviewed_at": "2026-11-05T12:20:25.682Z"
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 7,
+  "fields": {
+    "student": [
+      "shadreck"
+    ],
+    "document_type": "guarantor_id",
+    "file": "student_documents/images.jpg",
+    "status": "rejected",
+    "rejection_reason": "string",
+    "submitted_at": "2026-11-05T12:27:58.178Z",
+    "reviewed_by": [
+      "teststudent"
+    ],
+    "reviewed_at": "2026-11-05T12:30:33.203Z"
+  }
+},
+{
+  "model": "agreements.agreement",
+  "pk": "09906c1c-eebb-4111-9399-5ae6039da1fe",
+  "fields": {
+    "bond": null,
+    "student_id": "1",
+    "loan_reference": "first agreement",
+    "agreement_content": "STUDENT LOAN BONDING AGREEMENT\nStudent ID: 1\nLoan Reference: first agreement\nApproved agreement terms must be inserted here.",
+    "generated_pdf": "",
+    "status": "COUNTERSIGNED",
+    "generated_at": "2026-10-29T12:15:14.739Z",
+    "student_signed_at": "2026-10-29T12:16:07.759Z",
+    "board_countersigned_at": "2026-10-29T12:17:07.750Z",
+    "created_at": "2026-10-29T12:15:14.739Z",
+    "updated_at": "2026-10-29T12:17:07.750Z"
+  }
+},
+{
+  "model": "agreements.agreement",
+  "pk": "243e0848-feeb-43d9-a442-4eec7b34ddd6",
+  "fields": {
+    "bond": null,
+    "student_id": "teststudent",
+    "loan_reference": "LOAN-TEST-001",
+    "agreement_content": "STUDENT LOAN BONDING AGREEMENT\nStudent ID: teststudent\nLoan Reference: LOAN-TEST-001\nApproved agreement terms must be inserted here.",
+    "generated_pdf": "",
+    "status": "GENERATED",
+    "generated_at": "2026-10-29T11:16:09.440Z",
+    "student_signed_at": null,
+    "board_countersigned_at": null,
+    "created_at": "2026-10-29T11:16:09.440Z",
+    "updated_at": "2026-10-29T11:16:09.440Z"
+  }
+},
+{
+  "model": "agreements.agreement",
+  "pk": "33dc26e5-8aa7-4c60-804f-f8d82b5bb3cd",
+  "fields": {
+    "bond": null,
+    "student_id": "teststudent",
+    "loan_reference": "LOAN-TEST-001",
+    "agreement_content": "STUDENT LOAN BONDING AGREEMENT\nStudent ID: teststudent\nLoan Reference: LOAN-TEST-001\nApproved agreement terms must be inserted here.",
+    "generated_pdf": "",
+    "status": "GENERATED",
+    "generated_at": "2026-10-29T11:16:11.958Z",
+    "student_signed_at": null,
+    "board_countersigned_at": null,
+    "created_at": "2026-10-29T11:16:11.958Z",
+    "updated_at": "2026-10-29T11:16:11.958Z"
+  }
+},
+{
+  "model": "agreements.agreement",
+  "pk": "72a2323a-22b9-4b65-acd4-c9656eed1e6e",
+  "fields": {
+    "bond": null,
+    "student_id": "1",
+    "loan_reference": "string",
+    "agreement_content": "STUDENT LOAN BONDING AGREEMENT\nStudent ID: 1\nLoan Reference: string\nApproved agreement terms must be inserted here.",
+    "generated_pdf": "",
+    "status": "GENERATED",
+    "generated_at": "2026-10-29T12:14:54.412Z",
+    "student_signed_at": null,
+    "board_countersigned_at": null,
+    "created_at": "2026-10-29T12:14:54.412Z",
+    "updated_at": "2026-10-29T12:14:54.412Z"
+  }
+},
+{
+  "model": "agreements.agreement",
+  "pk": "956d5c0a-cad3-4283-a2f6-4711f4b7d65e",
+  "fields": {
+    "bond": null,
+    "student_id": "teststudent",
+    "loan_reference": "LOAN-TEST-001",
+    "agreement_content": "STUDENT LOAN BONDING AGREEMENT\nStudent ID: teststudent\nLoan Reference: LOAN-TEST-001\nApproved agreement terms must be inserted here.",
+    "generated_pdf": "",
+    "status": "COUNTERSIGNED",
+    "generated_at": "2026-10-19T11:34:33.712Z",
+    "student_signed_at": "2026-10-19T13:12:40.047Z",
+    "board_countersigned_at": "2026-10-19T13:14:08.393Z",
+    "created_at": "2026-10-19T11:34:33.712Z",
+    "updated_at": "2026-10-19T13:14:08.393Z"
+  }
+},
+{
+  "model": "agreements.agreement",
+  "pk": "c468178c-1d69-4dff-8ee7-cd5e006194ec",
+  "fields": {
+    "bond": null,
+    "student_id": "teststudent",
+    "loan_reference": "LOAN-TEST-001",
+    "agreement_content": "STUDENT LOAN BONDING AGREEMENT\nStudent ID: teststudent\nLoan Reference: LOAN-TEST-001\nApproved agreement terms must be inserted here.",
+    "generated_pdf": "",
+    "status": "GENERATED",
+    "generated_at": "2026-10-29T11:16:10.995Z",
+    "student_signed_at": null,
+    "board_countersigned_at": null,
+    "created_at": "2026-10-29T11:16:10.995Z",
+    "updated_at": "2026-10-29T11:16:10.995Z"
+  }
+},
+{
+  "model": "agreements.agreement",
+  "pk": "cde072d9-1eff-42f0-869b-25491f702ba4",
+  "fields": {
+    "bond": null,
+    "student_id": "3",
+    "loan_reference": "string",
+    "agreement_content": "STUDENT LOAN BONDING AGREEMENT\nStudent ID: 3\nLoan Reference: string\nApproved agreement terms must be inserted here.",
+    "generated_pdf": "",
+    "status": "COUNTERSIGNED",
+    "generated_at": "2026-10-29T13:18:02.944Z",
+    "student_signed_at": "2026-10-29T13:20:08.395Z",
+    "board_countersigned_at": "2026-10-29T13:21:08.535Z",
+    "created_at": "2026-10-29T13:18:02.944Z",
+    "updated_at": "2026-10-29T13:21:08.535Z"
+  }
+},
+{
+  "model": "bonds.bond",
+  "pk": 1,
+  "fields": {
+    "bond_reference": "5c5c8106-b8f9-4378-8eaf-6618f3e76390",
+    "student": [
+      "teststudent"
+    ],
+    "status": "approved",
+    "rejection_reason": "string",
+    "created_at": "2026-10-29T12:10:14.347Z",
+    "updated_at": "2026-10-29T13:15:03.833Z",
+    "reviewed_by": [
+      "teststudent"
+    ],
+    "reviewed_at": "2026-10-29T13:15:03.832Z"
+  }
+},
+{
+  "model": "bonds.bond",
+  "pk": 2,
+  "fields": {
+    "bond_reference": "fbc8c33b-7218-4c79-a3b4-151845984293",
+    "student": [
+      "shadreck"
+    ],
+    "status": "pending",
+    "rejection_reason": "",
+    "created_at": "2026-10-29T12:27:10.820Z",
+    "updated_at": "2026-10-29T12:27:10.820Z",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+},
+{
+  "model": "bonds.bond",
+  "pk": 3,
+  "fields": {
+    "bond_reference": "99534abb-d418-4e40-9915-f4f8850c0346",
+    "student": [
+      "shadreck"
+    ],
+    "status": "rejected",
+    "rejection_reason": "Duplicate legacy bond record.",
+    "created_at": "2026-10-29T13:12:55.379Z",
+    "updated_at": "2026-11-07T15:20:10.520Z",
+    "reviewed_by": null,
+    "reviewed_at": "2026-11-07T15:20:10.520Z"
+  }
+},
+{
+  "model": "bonds.bond",
+  "pk": 4,
+  "fields": {
+    "bond_reference": "4cd58501-d83e-42d7-9ff0-91489751967e",
+    "student": [
+      "teststudent"
+    ],
+    "status": "rejected",
+    "rejection_reason": "admin",
+    "created_at": "2026-11-05T12:58:24.052Z",
+    "updated_at": "2026-11-05T13:01:43.822Z",
+    "reviewed_by": [
+      "teststudent"
+    ],
+    "reviewed_at": "2026-11-05T13:01:43.822Z"
+  }
+}
+]

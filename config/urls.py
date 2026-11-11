@@ -25,20 +25,14 @@ urlpatterns = [
     path("login/", RoleBasedLoginView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 
-    # Document management
-    path("documents/", include("documents.urls")),
+    # Document management (paths start with api/ or documents/ themselves)
+    path("", include("documents.urls")),
 
     # Bond status tracking API
     path("api/bonds/", include("bonds.urls")),
 
     # Agreement management API
     path("api/agreements/", include("agreements.urls")),
-
-    # Verification API
-    path("api/verification/", include("verification.urls")),
-
-    # Reporting API
-    path("api/reports/", include("reporting.urls")),
 
     # Authentication (JWT, registration, password reset)
     path("api/register/", RegistrationView.as_view(), name="register"),

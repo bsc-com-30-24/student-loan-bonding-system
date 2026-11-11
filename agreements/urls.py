@@ -6,6 +6,7 @@ from .views import (
     AgreementGenerateView,
     AgreementSignView,
     AgreementCountersignView,
+    AgreementPDFDownloadView,
 )
 
 urlpatterns = [
@@ -28,6 +29,11 @@ urlpatterns = [
         '<uuid:agreement_number>/countersign/',
         AgreementCountersignView.as_view(),
         name='agreement-countersign'
+    ),
+    path(
+        '<uuid:agreement_number>/download/',
+        AgreementPDFDownloadView.as_view(),
+        name='agreement-download'
     ),
     path(
         '<uuid:agreement_number>/',

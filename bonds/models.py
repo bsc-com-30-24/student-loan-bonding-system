@@ -1,6 +1,27 @@
-from django.conf import settings
-from django.db import models
 import uuid
+from decimal import Decimal
+
+from django.conf import settings
+from django.core.validators import MinValueValidator
+from django.db import models
+
+
+class AcademicYear(models.Model):
+    """One bonding cycle, for example 2026 or 2025/2026.
+
+    A bond belongs to exactly one academic year. Later years get their own
+    bond and their own amount; they never replace an earlier year.
+    """
+
+    label = models.CharField(max_length=9, unique=True)
+    is_current = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-label"]
+
+    def __str__(self):
+        return self.label
 
 
 class Bond(models.Model):
@@ -22,6 +43,53 @@ class Bond(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="bonds",
+    )
+
+    academic_year = models.ForeignKey(
+        AcademicYear,
+        on_delete=models.PROTECT,
+        related_name="bonds",
+        null=True,
+        blank=True,
+    )
+
+    loan_application = models.ForeignKey(
+        "authentication.LoanApplication",
+        on_delete=models.PROTECT,
+        related_name="bonds",
+        null=True,
+        blank=True,
+    )
+
+    # Snapshots taken when the bond is created. Later applications and
+    # profile edits must not change a year that was already recorded.
+    registration_number = models.CharField(max_length=50, blank=True, default="")
+
+    tuition_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+
+    upkeep_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+
+    documents = models.ManyToManyField(
+        "documents.Document",
+        related_name="bonds",
+        blank=True,
     )
 
     status = models.CharField(
@@ -56,5 +124,14 @@ class Bond(models.Model):
         blank=True,
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "academic_year"],
+                name="unique_bond_per_student_per_academic_year",
+            )
+        ]
+
     def __str__(self):
-        return f"Bond {self.bond_reference} - {self.status}"
+        year = self.academic_year.label if self.academic_year_id else "no year"
+        return f"Bond {self.bond_reference} ({year}) - {self.status}"
