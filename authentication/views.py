@@ -8,7 +8,7 @@ from django.db import transaction
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, viewsets
 from rest_framework.filters import SearchFilter
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -155,8 +155,10 @@ class RoleTokenObtainPairView(TokenObtainPairView):
         summary="Submit a loan application",
         description=(
             "Students only. Send tuition_amount and upkeep_amount (neither can be "
-            "negative and the total must be above zero). The owner is taken from "
-            "the logged-in user, the status always starts as pending and the "
+            "negative and the total must be above zero). Optionally send "
+            "academic_year (for example 2027); otherwise the current year is used. "
+            "Each student has one application per academic year. The owner is taken "
+            "from the logged-in user, the status always starts as pending and the "
             "loan_reference (e.g. SLBS-2026-00001) is generated automatically."
         ),
     ),
@@ -216,6 +218,21 @@ class LoanApplicationViewSet(viewsets.ModelViewSet):
             and serializer.instance.status != LoanApplication.Status.PENDING
         ):
             raise PermissionDenied("Only pending applications can be edited.")
+        from bonds.models import Bond
+
+        if Bond.objects.filter(loan_application=serializer.instance).exists():
+            locked = {"tuition_amount", "upkeep_amount"} & set(
+                serializer.validated_data
+            )
+            if locked:
+                raise ValidationError(
+                    {
+                        "tuition_amount": (
+                            "This academic year's bond already keeps these "
+                            "amounts. They are not overwritten."
+                        )
+                    }
+                )
         serializer.save()
 
     def perform_destroy(self, instance):

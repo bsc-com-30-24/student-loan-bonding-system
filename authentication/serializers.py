@@ -33,6 +33,14 @@ class DetailSerializer(serializers.Serializer):
 
 class LoanApplicationSerializer(serializers.ModelSerializer):
     amount = serializers.SerializerMethodField()
+    academic_year = serializers.CharField(
+        required=False,
+        allow_blank=False,
+        help_text=(
+            "Academic year for these fees, for example 2026 or 2025/2026. "
+            "Defaults to the current year. One application per student per year."
+        ),
+    )
 
     class Meta:
         model = LoanApplication
@@ -40,6 +48,7 @@ class LoanApplicationSerializer(serializers.ModelSerializer):
             "id",
             "loan_reference",
             "owner",
+            "academic_year",
             "tuition_amount",
             "upkeep_amount",
             "amount",
@@ -70,6 +79,48 @@ class LoanApplicationSerializer(serializers.ModelSerializer):
                 "The combined loan amount must be greater than zero."
             )
         return attrs
+
+    def _academic_year(self, label):
+        from bonds.academic import get_current_academic_year, get_or_create_academic_year
+
+        if label:
+            return get_or_create_academic_year(label)
+        if self.instance is not None and self.instance.academic_year_id:
+            return self.instance.academic_year
+        return get_current_academic_year()
+
+    def create(self, validated_data):
+        label = validated_data.pop("academic_year", None)
+        year = self._academic_year(label)
+        owner = validated_data.get("owner")
+        if (
+            owner is not None
+            and LoanApplication.objects.filter(
+                owner=owner, academic_year=year
+            ).exists()
+        ):
+            raise serializers.ValidationError(
+                {
+                    "academic_year": (
+                        "This student already has an application for "
+                        f"{year.label}. A later year needs its own application."
+                    )
+                }
+            )
+        validated_data["academic_year"] = year
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        # The year is fixed once the application exists, so a later edit
+        # cannot move this year's fees onto another year.
+        validated_data.pop("academic_year", None)
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        year = instance.academic_year
+        data["academic_year"] = year.label if year is not None else None
+        return data
 
 
 class LoanApplicationReviewSerializer(LoanApplicationSerializer):

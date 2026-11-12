@@ -7,12 +7,13 @@ from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from agreements.models import Agreement
-from authentication.models import UserProfile
-from bonds.models import Bond
+from decimal import Decimal
 
-from .models import Document, Notification
-from .services import COMPULSORY_DOCUMENT_TYPES
+from agreements.models import Agreement
+from authentication.models import LoanApplication, UserProfile
+from bonds.models import Bond
+from documents.models import Notification
+from documents.services import COMPULSORY_DOCUMENT_TYPES
 
 User = get_user_model()
 
@@ -58,6 +59,16 @@ class WorkflowIntegrationTests(APITestCase):
         self.admin = make_user("admin1", UserProfile.Role.UNIVERSITY_ADMIN)
         self.officer = make_user(
             "officer1", UserProfile.Role.LOAN_BOARD_OFFICER
+        )
+        LoanApplication.objects.create(
+            owner=self.student,
+            tuition_amount=Decimal("800.00"),
+            upkeep_amount=Decimal("200.00"),
+        )
+        LoanApplication.objects.create(
+            owner=self.other_student,
+            tuition_amount=Decimal("100.00"),
+            upkeep_amount=Decimal("50.00"),
         )
 
     # ---------- helpers ----------
@@ -123,10 +134,10 @@ class WorkflowIntegrationTests(APITestCase):
         self.assertEqual(bond.status, "pending")
         self.assertEqual(last.data["bond_id"], bond.id)
 
-        # Notifications: one per review plus one for the bond.
+        self.assertTrue(last.data["agreement_generated"])
         self.assertEqual(
             Notification.objects.filter(student=self.student).count(),
-            len(COMPULSORY_DOCUMENT_TYPES) + 1,
+            1,
         )
 
         # The student sees the bond; another student does not.
@@ -138,24 +149,21 @@ class WorkflowIntegrationTests(APITestCase):
             self.client.get(reverse("bond-list-create")).data, []
         )
 
-        # 5. No agreement before the bond is approved.
-        self.client.force_authenticate(self.student)
-        response = self.client.post(reverse("agreement-generate"))
-        self.assertEqual(response.status_code, 400)
+        agreement = Agreement.objects.get()
+        self.assertEqual(agreement.bond_id, bond.id)
+        self.assertEqual(agreement.total_amount, Decimal("1000.00"))
+        agreement_number = str(agreement.agreement_number)
 
-        # 4. Admin approves the bond.
+        # A second generate call does not replace the agreement.
+        self.client.force_authenticate(self.student)
+        self.assertEqual(
+            self.client.post(reverse("agreement-generate")).status_code, 400
+        )
+        self.assertEqual(Agreement.objects.count(), 1)
+
+        # The bond is approved after the agreement exists.
         response = self.approve_bond(bond.id)
         self.assertEqual(response.status_code, 200, response.data)
-
-        # 5. Student generates the agreement (once only).
-        self.client.force_authenticate(self.student)
-        response = self.client.post(reverse("agreement-generate"))
-        self.assertEqual(response.status_code, 201, response.data)
-        agreement_number = response.data["agreement_number"]
-        self.assertEqual(Agreement.objects.get().bond_id, bond.id)
-        self.assertEqual(
-            self.client.post(reverse("agreement-generate")).status_code, 409
-        )
 
         sign_url = reverse(
             "agreement-sign", kwargs={"agreement_number": agreement_number}

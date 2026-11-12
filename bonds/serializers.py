@@ -109,6 +109,16 @@ class BondHistorySerializer(serializers.ModelSerializer):
         allow_null=True,
     )
     user = serializers.CharField(source="student.username", read_only=True)
+    email = serializers.EmailField(source="student.email", read_only=True)
+    full_name = serializers.SerializerMethodField()
+    programme = serializers.SerializerMethodField()
+    year_of_study = serializers.SerializerMethodField()
+    phone_number = serializers.SerializerMethodField()
+    loan_reference = serializers.CharField(
+        source="loan_application.loan_reference",
+        read_only=True,
+        allow_null=True,
+    )
     agreement_number = serializers.SerializerMethodField()
     agreement_status = serializers.SerializerMethodField()
 
@@ -119,14 +129,39 @@ class BondHistorySerializer(serializers.ModelSerializer):
             "academic_year",
             "registration_number",
             "user",
-            "amount",
+            "email",
+            "full_name",
+            "programme",
+            "year_of_study",
+            "phone_number",
+            "loan_reference",
             "tuition_amount",
             "upkeep_amount",
+            "amount",
             "status",
             "agreement_number",
             "agreement_status",
             "created_at",
         ]
+
+    def _detail(self, obj):
+        return getattr(obj.student, "student_detail", None)
+
+    def get_full_name(self, obj):
+        detail = self._detail(obj)
+        return detail.full_name if detail is not None else ""
+
+    def get_programme(self, obj):
+        detail = self._detail(obj)
+        return detail.programme if detail is not None else ""
+
+    def get_year_of_study(self, obj):
+        detail = self._detail(obj)
+        return detail.year_of_study if detail is not None else None
+
+    def get_phone_number(self, obj):
+        detail = self._detail(obj)
+        return detail.phone_number if detail is not None else ""
 
     def get_agreement_number(self, obj):
         agreement = getattr(obj, "agreement", None)

@@ -22,7 +22,15 @@ COMPULSORY_DOCUMENT_TYPES = (
 MONEY = Decimal("0.01")
 
 
+def student_record(user):
+    """Personal details kept on the student, copied onto the agreement."""
+    return getattr(user, "student_detail", None)
+
+
 def student_display_name(user):
+    detail = student_record(user)
+    if detail is not None and detail.full_name.strip():
+        return detail.full_name.strip()
     full_name = user.get_full_name().strip()
     return full_name or user.get_username()
 
@@ -33,8 +41,8 @@ def registration_number_for(user):
 
 
 def programme_for(user):
-    profile = getattr(user, "profile", None)
-    return getattr(profile, "programme", "") or ""
+    detail = student_record(user)
+    return (detail.programme if detail is not None else "") or ""
 
 
 def resolve_loan_application(student, application_id=None):
@@ -67,21 +75,25 @@ def has_all_compulsory_documents_verified(student, loan_application):
 
 def build_agreement_content(bond, agreement_amounts):
     year = bond.academic_year.label if bond.academic_year_id else ""
+    year_of_study = agreement_amounts.get("year_of_study") or "-"
+    phone = agreement_amounts.get("phone_number") or "-"
     return (
         "STUDENT LOAN BONDING AGREEMENT\n\n"
         f"Academic year: {year}\n"
         f"Student: {agreement_amounts['student_name']}\n"
         f"Registration number: {bond.registration_number}\n"
         f"Programme: {agreement_amounts['programme'] or '-'}\n"
+        f"Year of study: {year_of_study}\n"
+        f"Phone: {phone}\n"
         f"Loan reference: {agreement_amounts['loan_reference']}\n"
         f"Bond reference: {bond.bond_reference}\n\n"
         f"Tuition fees: {bond.tuition_amount}\n"
         f"Upkeep: {bond.upkeep_amount}\n"
         f"Total amount: {bond.amount}\n\n"
         "This agreement records the bonding arrangement for the academic "
-        "year above. The amounts are taken from the student's submitted "
-        "application and verified documents. A later academic year receives "
-        "its own bond and does not change this record.\n\n"
+        "year above. The amounts and the student details are taken from "
+        "the submitted application and verified documents. A later academic "
+        "year receives its own bond and does not change this record.\n\n"
         "The bond stays pending until a university administrator approves "
         "the generated agreement."
     )
@@ -89,9 +101,12 @@ def build_agreement_content(bond, agreement_amounts):
 
 def _create_agreement(bond, application, student):
     loan_reference = application.loan_reference or str(bond.bond_reference)
+    detail = student_record(student)
     details = {
         "student_name": student_display_name(student),
         "programme": programme_for(student),
+        "year_of_study": detail.year_of_study if detail is not None else None,
+        "phone_number": (detail.phone_number if detail is not None else "") or "",
         "loan_reference": loan_reference,
     }
     agreement = Agreement(
@@ -100,6 +115,8 @@ def _create_agreement(bond, application, student):
         loan_reference=loan_reference,
         student_name=details["student_name"],
         programme=details["programme"],
+        year_of_study=details["year_of_study"],
+        phone_number=details["phone_number"],
         academic_year_label=(
             bond.academic_year.label if bond.academic_year_id else ""
         ),

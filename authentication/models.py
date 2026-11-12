@@ -118,6 +118,14 @@ class LoanApplication(models.Model):
         default=Decimal("0.00"),
         validators=[MinValueValidator(Decimal("0.00"))],
     )
+    academic_year = models.ForeignKey(
+        "bonds.AcademicYear",
+        on_delete=models.PROTECT,
+        related_name="loan_applications",
+        null=True,
+        blank=True,
+        help_text="The year these tuition and upkeep amounts belong to.",
+    )
     status = models.CharField(
         max_length=10,
         choices=Status.choices,
@@ -128,6 +136,12 @@ class LoanApplication(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "academic_year"],
+                name="one_loan_application_per_student_per_academic_year",
+            ),
+        ]
 
     def get_total_amount(self):
         return self.tuition_amount + self.upkeep_amount
@@ -135,6 +149,13 @@ class LoanApplication(models.Model):
     def save(self, *args, **kwargs):
         # First save gets a database ID; then the reference is built from it,
         # e.g. ID 15 in 2026 -> SLBS-2026-00015. Both saves succeed or neither does.
+        if self.academic_year_id is None:
+            from bonds.academic import get_current_academic_year
+
+            self.academic_year = get_current_academic_year()
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                kwargs["update_fields"] = list(update_fields) + ["academic_year"]
         with transaction.atomic():
             super().save(*args, **kwargs)
             if not self.loan_reference:

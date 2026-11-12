@@ -3,7 +3,8 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
+from django.db.models import Q
 
 
 class AcademicYear(models.Model):
@@ -13,12 +14,30 @@ class AcademicYear(models.Model):
     bond and their own amount; they never replace an earlier year.
     """
 
-    label = models.CharField(max_length=9, unique=True)
-    is_current = models.BooleanField(default=False)
+    label = models.CharField(max_length=20, unique=True)
+    is_current = models.BooleanField(
+        default=False,
+        help_text="The year new applications go into. Only one year is current.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-label"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["is_current"],
+                condition=Q(is_current=True),
+                name="only_one_current_academic_year",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            if self.is_current:
+                AcademicYear.objects.exclude(pk=self.pk).filter(
+                    is_current=True
+                ).update(is_current=False)
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return self.label

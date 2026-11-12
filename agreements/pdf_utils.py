@@ -48,6 +48,14 @@ def generate_agreement_pdf(agreement):
             styles["Normal"],
         ),
         Paragraph(
+            f"Year of study: {line(agreement.year_of_study or '-')}",
+            styles["Normal"],
+        ),
+        Paragraph(
+            f"Phone: {line(agreement.phone_number or '-')}",
+            styles["Normal"],
+        ),
+        Paragraph(
             f"Loan reference: {line(agreement.loan_reference)}",
             styles["Normal"],
         ),

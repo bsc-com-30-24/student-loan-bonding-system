@@ -9,15 +9,23 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from rest_framework.permissions import AllowAny
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from authentication.views import (
+    LoanApplicationViewSet,
     PasswordResetConfirmView,
     PasswordResetRequestView,
     RegistrationView,
     RoleTokenObtainPairView,
+    StudentDetailMeView,
+    StudentDetailViewSet,
 )
 from documents.views import RoleBasedLoginView
+
+router = DefaultRouter()
+router.register("loans", LoanApplicationViewSet, basename="loan-application")
+router.register("students", StudentDetailViewSet, basename="student-detail")
 
 urlpatterns = [
     # Django administration and login
@@ -33,6 +41,12 @@ urlpatterns = [
 
     # Agreement management API
     path("api/agreements/", include("agreements.urls")),
+
+    # Tuition applications, student details, reports and bond checks
+    path("api/students/me/", StudentDetailMeView.as_view(), name="student-detail-me"),
+    path("api/", include(router.urls)),
+    path("api/reports/", include("reporting.urls")),
+    path("api/verification/", include("verification.urls")),
 
     # Authentication (JWT, registration, password reset)
     path("api/register/", RegistrationView.as_view(), name="register"),

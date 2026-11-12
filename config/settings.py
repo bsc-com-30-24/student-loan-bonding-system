@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -193,6 +194,13 @@ REST_FRAMEWORK = {
 }
 
 
+# JWT token lifetimes (the default access token lasts only 5 minutes)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
+
+
 # Swagger and ReDoc configuration
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Student Loan Bonding System API',
@@ -204,15 +212,21 @@ SPECTACULAR_SETTINGS = {
     ),
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    # Keep the pasted token after reloading the Swagger page
+    'SWAGGER_UI_SETTINGS': {'persistAuthorization': True},
     # Stable names for the two different 'status' choice sets in Swagger.
     'ENUM_NAME_OVERRIDES': {
         'LoanStatusEnum': 'authentication.models.LoanApplication.Status',
         'DocumentStatusEnum': 'documents.models.Document.STATUS_CHOICES',
     },
-    # Section order in Swagger: Authentication, Documents, Bonds, Agreements.
+    # Hooks run in this order. The last one decides the final group names
+    # and their order in Swagger: Authentication, Students, Loan
+    # Applications, Documents - Student, Documents - Admin, Notifications,
+    # Bonds, Agreements.
     'POSTPROCESSING_HOOKS': [
         'drf_spectacular.hooks.postprocess_schema_enums',
         'authentication.schema.order_tags',
+        'config.schema_hooks.tag_authentication_endpoints',
     ],
     'COMPONENT_SPLIT_REQUEST': True,
     'COMPONENT_SPLIT_PATCH': True,

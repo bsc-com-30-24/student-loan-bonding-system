@@ -40,7 +40,9 @@ class Agreement(models.Model):
     # agreement is generated, so the downloadable template stays fixed.
     student_name = models.CharField(max_length=200, blank=True, default="")
     programme = models.CharField(max_length=120, blank=True, default="")
-    academic_year_label = models.CharField(max_length=9, blank=True, default="")
+    academic_year_label = models.CharField(max_length=20, blank=True, default="")
+    year_of_study = models.PositiveSmallIntegerField(null=True, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True, default="")
     tuition_amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,

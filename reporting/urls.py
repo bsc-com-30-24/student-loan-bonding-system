@@ -3,11 +3,13 @@ from django.urls import path
 
 from .views import (
     ActiveLoansReportView,
-    SignedBondsReportView,
+    BondReportView,
     DefaultersReportView,
+    SignedBondsReportView,
 )
 
 urlpatterns = [
+    path("", BondReportView.as_view(), name="bond-report"),
     path(
         "active-loans/",
         ActiveLoansReportView.as_view(),

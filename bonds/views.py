@@ -44,8 +44,13 @@ class IsUniversityAdmin(permissions.BasePermission):
 def bonds_for_user(user):
     """Admins and officers see every bond; a student sees only their own."""
     queryset = Bond.objects.select_related(
-        "student", "academic_year", "loan_application"
-    ).prefetch_related("documents", "agreement")
+        "student",
+        "student__profile",
+        "student__student_detail",
+        "academic_year",
+        "loan_application",
+        "agreement",
+    ).prefetch_related("documents")
 
     role = get_user_role(user)
     if role in (

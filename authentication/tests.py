@@ -225,18 +225,29 @@ class LoanAccessTests(APITestCase):
             LOANS_URL,
             {
                 "owner": self.other_student.id,
+                "academic_year": "2027",
                 "tuition_amount": "1000.00",
                 "upkeep_amount": "500.00",
                 "status": LoanApplication.Status.APPROVED,
             },
             format="json",
         )
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(r.status_code, 201, r.data)
         created = LoanApplication.objects.get(id=r.data["id"])
         self.assertEqual(created.owner, self.student)
+        self.assertEqual(created.academic_year.label, "2027")
         self.assertEqual(created.status, LoanApplication.Status.PENDING)
         self.assertTrue(r.data["loan_reference"].startswith("SLBS-"))
         self.assertEqual(r.data["amount"], Decimal("1500.00"))
+        self.assertEqual(r.data["academic_year"], "2027")
+
+        # The year already used in setUp cannot be applied for again.
+        duplicate = self.client.post(
+            LOANS_URL,
+            {"tuition_amount": "100.00", "upkeep_amount": "50.00"},
+            format="json",
+        )
+        self.assertEqual(duplicate.status_code, 400)
 
     def test_invalid_amounts_rejected(self):
         self.client.force_authenticate(self.student)

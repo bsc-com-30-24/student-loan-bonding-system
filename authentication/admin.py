@@ -58,13 +58,14 @@ class LoanApplicationAdmin(admin.ModelAdmin):
         "id",
         "loan_reference",
         "owner",
+        "academic_year",
         "tuition_amount",
         "upkeep_amount",
         "total_amount",
         "status",
         "created_at",
     ]
-    list_filter = ["status", "created_at"]
+    list_filter = ["status", "academic_year", "created_at"]
     search_fields = ["loan_reference", "owner__username", "owner__email"]
     readonly_fields = ["loan_reference", "created_at", "updated_at"]
 
